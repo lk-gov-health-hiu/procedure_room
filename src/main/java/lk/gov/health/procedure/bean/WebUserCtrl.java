@@ -36,7 +36,7 @@ public class WebUserCtrl implements Serializable {
     private String userName;
     private String userPassword;
     private WebUser loggedUser;
-    List<UserPrivilege> loggedUserPrivileges;    
+    private List<UserPrivilege> loggedUserPrivileges;
 
     public String loginNew() {
 
@@ -145,6 +145,14 @@ public class WebUserCtrl implements Serializable {
 
     public void setUserPrivilegeFacade(UserPrivilegeFacade userPrivilegeFacade) {
         this.userPrivilegeFacade = userPrivilegeFacade;
+    }
+
+    public List<UserPrivilege> getLoggedUserPrivileges() {
+        return loggedUserPrivileges;
+    }
+
+    public void setLoggedUserPrivileges(List<UserPrivilege> loggedUserPrivileges) {
+        this.loggedUserPrivileges = loggedUserPrivileges;
     }
 
 }
