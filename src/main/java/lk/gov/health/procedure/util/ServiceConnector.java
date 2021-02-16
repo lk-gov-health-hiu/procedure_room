@@ -99,9 +99,7 @@ public class ServiceConnector {
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(ServiceConnector.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(ServiceConnector.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex) {
+        } catch (IOException | ParseException ex) {
             Logger.getLogger(ServiceConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
 
