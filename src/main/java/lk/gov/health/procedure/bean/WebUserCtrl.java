@@ -5,10 +5,15 @@
  */
 package lk.gov.health.procedure.bean;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
@@ -20,13 +25,16 @@ import lk.gov.health.procedure.facade.WebUserFacade;
 import lk.gov.health.procedure.facade.util.JsfUtil;
 import lk.gov.health.procedure.util.ServiceConnector;
 import org.jasypt.util.password.BasicPasswordEncryptor;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
  * @author user
  */
-@Named
+@Named("webUserCtrl")
 @SessionScoped
 public class WebUserCtrl implements Serializable {
 
@@ -36,9 +44,31 @@ public class WebUserCtrl implements Serializable {
     private UserPrivilegeFacade userPrivilegeFacade;
 
     private String userName;
-    private String userPassword;
-    private WebUser loggedUser;
-    private List<UserPrivilege> loggedUserPrivileges;
+    private String privilege;
+    private String userId;
+    private String apiKey;
+    private String userRole;
+    private String userRoleLabel;
+    private String insCode;
+    private String insName;
+
+    String mainAppUrl = "http://localhost:8080/chims/data";
+
+    public boolean IsSystemAdmin() {
+        return userRole != null && this.userRole.equals("System_Administrator");
+    }
+
+    public boolean IsInstituteAdmin() {
+        return userRole != null && this.userRole.matches("Institution_Administrator|System_Administrator");
+    }
+
+    public boolean IsUser() {
+        return userRole != null && this.userRole.matches("Nurse|Institution_Administrator|System_Administrator");
+    }
+
+    public String imageLocation() {
+        return "resources/image/hims_logo.png";
+    }
 
     public String loginNew() {
 
@@ -46,52 +76,33 @@ public class WebUserCtrl implements Serializable {
 //            JsfUtil.addErrorMessage("Please enter Username");
 //            return "";
 //        }
-
 //        if (userPassword == null || userPassword.trim().equals("")) {
 //            JsfUtil.addErrorMessage("Please enter Password");
 //            return "";
 //        }
-
 //        if (!checkLoginNew()) {
 //            JsfUtil.addErrorMessage("Username/Password Error. Please retry.");
 //            return "";
 //        }
-
 //        loggedUserPrivileges = userPrivilegeList(loggedUser);
-
         ServiceConnector sc = new ServiceConnector();
         JSONObject obj = sc.GetRequest("http://localhost:8080/ProcedureRoomService/resources/lk.gov.health.procedureroomservice.procedureroom/count");
-        
+
         userName = obj.get("room_count").toString();
-                
+
         JsfUtil.addSuccessMessage("Successfully Logged");
         return "/index";
     }
-
-    private boolean checkLoginNew() {
-        if (getEjbFacade() != null) {
-            String jpql_ = "SELECT u FROM WebUser u WHERE lower(u.name)=:userName and u.retired =:ret";
-
-            Map m = new HashMap();
-            m.put("userName", userName.trim().toLowerCase());
-            m.put("ret", false);
-
-            loggedUser = getEjbFacade().findFirstByJpql(jpql_, m);
-            if (loggedUser != null) {
-                return matchPassword(userPassword, loggedUser.getWebUserPassword());
-            } else {
-                JsfUtil.addErrorMessage("Server Error");
-            }
-        }
-        loggedUser = null;
-        return false;
+    
+    public String logOut(){
+        return "/index";
     }
 
     public boolean matchPassword(String planePassword, String encryptedPassword) {
         BasicPasswordEncryptor en = new BasicPasswordEncryptor();
         return en.checkPassword(planePassword, encryptedPassword);
     }
-    
+
     public List<UserPrivilege> userPrivilegeList(WebUser u) {
         return userPrivilegeList(u, null);
     }
@@ -115,6 +126,13 @@ public class WebUserCtrl implements Serializable {
         return getUserPrivilegeFacade().findByJpql(j, m);
     }
 
+    public String getWebUserRoleLabel() {
+        Client client = Client.create();
+        WebResource webResource1 = client.resource(mainAppUrl + "/get_role_name/" + this.userRole);
+        ClientResponse cr = webResource1.accept("application/json").get(ClientResponse.class);
+        return cr.getEntity(String.class);        
+    }
+
     public WebUserFacade getEjbFacade() {
         return ejbFacade;
     }
@@ -131,22 +149,6 @@ public class WebUserCtrl implements Serializable {
         this.userName = userName;
     }
 
-    public String getUserPassword() {
-        return userPassword;
-    }
-
-    public void setUserPassword(String userPassword) {
-        this.userPassword = userPassword;
-    }
-
-    public WebUser getLoggedUser() {
-        return loggedUser;
-    }
-
-    public void setLoggedUser(WebUser loggedUser) {
-        this.loggedUser = loggedUser;
-    }
-
     public UserPrivilegeFacade getUserPrivilegeFacade() {
         return userPrivilegeFacade;
     }
@@ -155,12 +157,59 @@ public class WebUserCtrl implements Serializable {
         this.userPrivilegeFacade = userPrivilegeFacade;
     }
 
-    public List<UserPrivilege> getLoggedUserPrivileges() {
-        return loggedUserPrivileges;
+    public String getPrivilege() {
+        return privilege;
     }
 
-    public void setLoggedUserPrivileges(List<UserPrivilege> loggedUserPrivileges) {
-        this.loggedUserPrivileges = loggedUserPrivileges;
+    public void setPrivilege(String privilege) {
+        this.privilege = privilege;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public String getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(String userRole) {
+        this.userRole = userRole;
+    }
+
+    public String getInsCode() {
+        return insCode;
+    }
+
+    public void setInsCode(String insCode) {
+        this.insCode = insCode;
+    }
+
+    public String getUserRoleLabel() {
+        return userRoleLabel;
+    }
+
+    public void setUserRoleLabel(String userRoleLabel) {
+        this.userRoleLabel = userRoleLabel;
+    }
+
+    public String getInsName() {
+        return insName;
+    }
+
+    public void setInsName(String insName) {
+        this.insName = insName;
+    }
 }

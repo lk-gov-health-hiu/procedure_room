@@ -24,12 +24,11 @@ public class ProcedureTypePojo {
     }
 
     public ProcedureTypePojo() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
     }
     
     public JSONObject getJsonObject(){
-        JSONObject jo_ = new JSONObject();
-        
+        JSONObject jo_ = new JSONObject(); 
         jo_.put("procedureType", this.getProcedureType());
         jo_.put("description", this.getDescription());
         
